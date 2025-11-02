@@ -40,6 +40,7 @@ def vulnerable_hidden_data():
 
             for entry in result:
                 print(dict(zip(columns, entry)))
+
         else:
             print(Fore.RED + "(-) Invalid role")
     except Exception as e:
@@ -47,6 +48,32 @@ def vulnerable_hidden_data():
 
     cur.close()
     conn.close()    
+
+def vulnerable_hidden_data_with():
+    with connect_db() as conn:
+        with conn.cursor() as cur:
+
+            print("-- Display public profiles")
+            role = input("Enter role (admin/moderator/user): ")
+
+            query = f"SELECT * FROM profiles WHERE role = '{role}' AND private = FALSE"
+            print(Fore.CYAN + "Executing:", query)
+
+            try:
+                cur.execute(query)
+                result = cur.fetchall()
+                if result:
+                    print(Fore.GREEN + "(+) Profiles:")
+                    columns = [desc[0] for desc in cur.description]
+
+                    for entry in result:
+                        print(dict(zip(columns, entry)))
+
+                else:
+                    print(Fore.RED + "(-) Invalid role")
+            except Exception as e:
+                print("(!) Error:", e)
+    #conn.close()    
 
 def vulnerable_login():
     conn = connect_db()
@@ -158,7 +185,7 @@ def vulnerable_blind():
 
 options = {
     -2: fixed_login,
-    1: vulnerable_hidden_data,
+    1: vulnerable_hidden_data_with,
     2: vulnerable_login,
     3: vulnerable_union,
     4: vulnerable_blind

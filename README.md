@@ -6,7 +6,12 @@
 - `presentation/` - .pptx and relevant files
 - `documentation/` - .docx and relevant files
 
-## Running the Playground
+## Project-specific info
+### 1. `1-sqli`
+- Docker + Database init files: `docker-compose.yml`, `init.sql`
+- Example payloads: `payloads.txt`
+
+#### Running the Playground
 1. Create the virtual environment within the `project` folder. It will be used for both projects
 ```bash
 python3 -m venv venv
@@ -27,7 +32,11 @@ docker-compose down -v
 docker-compose up -d
 ```
 
-## Project-specific info
-1. `1-sqli`
-- Docker + Database init files: `docker-compose.yml`, `init.sql`
-- Example payloads: `payloads.txt`
+### 2. `2-nosqli`
+- Server: `server.js`
+
+#### Running the Playground
+1. Start MongoDB: `docker run -d -p 27017:27017 --name mongodb-demo mongo:latest`
+2. Install dependencies: `npm install`
+3. Run the server: `node server.js`
+4. Navigate to http://localhost:3000
